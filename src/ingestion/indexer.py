@@ -38,13 +38,16 @@ def build_vector_index(hadiths: List[Dict[str, Any]]) -> None:
         hadiths: List of hadith records.
     """
     import torch
+    import os
     
-    # Detect best device (MPS for Apple Silicon, CUDA for NVIDIA, else CPU)
-    if torch.backends.mps.is_available():
-        device = "mps"
-        batch_size = 512  # Maximum batch for Mac GPU
-        print(f"Using Apple Silicon MPS GPU (batch_size={batch_size})")
-    elif torch.cuda.is_available():
+    # Force CPU to avoid MPS segfault issues with sentence-transformers
+    # Set environment variable to disable MPS
+    os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
+    
+    # Use CPU by default for stability (MPS can cause segfaults)
+    force_cpu = os.environ.get("FORCE_CPU", "1") == "1"
+    
+    if not force_cpu and torch.cuda.is_available():
         device = "cuda"
         batch_size = 512
         print(f"Using CUDA GPU (batch_size={batch_size})")
