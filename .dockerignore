@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+*.egg-info/
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Raw data (not needed - already processed)
+raw_data/
+
+# Test files
+test_*.py
+*.log
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Docs
+*.md
+docs/
