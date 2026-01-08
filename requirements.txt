@@ -1,0 +1,23 @@
+# API & Server
+fastapi>=0.109.0
+uvicorn>=0.27.0
+pydantic>=2.5.3
+
+# Frontend
+gradio>=4.44.0
+
+# Search & ML - Optimized for Raspberry Pi 5 (16GB)
+chromadb>=0.4.22
+sentence-transformers>=2.3.1
+rank-bm25>=0.2.2
+
+# PyTorch - Install separately on Pi 5:
+# pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+torch
+torchvision
+
+# PDF Processing
+PyMuPDF>=1.23.8
+
+# Optional: Better tokenization
+tokenizers>=0.15.0
