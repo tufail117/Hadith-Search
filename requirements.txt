@@ -7,8 +7,9 @@ pydantic>=2.5.3
 gradio>=4.44.0
 
 # Search & ML - Optimized for Raspberry Pi 5 (16GB)
-chromadb>=0.4.22
-sentence-transformers>=2.3.1
+# IMPORTANT: Pin exact versions to match pre-built vector index
+chromadb==0.4.22
+sentence-transformers==2.2.2
 rank-bm25>=0.2.2
 
 # PyTorch - Install separately on Pi 5:
