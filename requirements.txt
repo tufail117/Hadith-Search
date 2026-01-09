@@ -1,20 +1,21 @@
+# Frozen versions from working hadith-app environment
+# IMPORTANT: These exact versions are required for ChromaDB compatibility
+
 # API & Server
-fastapi>=0.109.0
-uvicorn>=0.27.0
-pydantic>=2.5.3
+fastapi==0.109.1
+uvicorn==0.30.1
+pydantic==2.7.4
 
 # Frontend
-gradio>=4.44.0
+gradio==5.1.0
 
-# Search & ML - Optimized for Raspberry Pi 5 (16GB)
-# IMPORTANT: Pin exact versions to match pre-built vector index
+# Search & ML - Pinned for pre-built vector index compatibility
 chromadb==0.4.22
-sentence-transformers==2.2.2
-rank-bm25>=0.2.2
+sentence-transformers==2.7.0
+rank-bm25==0.2.2
 
-# PyTorch - Install separately on Pi 5:
-# pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-torch
+# PyTorch
+torch==2.2.0
 torchvision
 
 # PDF Processing
