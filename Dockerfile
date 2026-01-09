@@ -12,8 +12,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy requirements first for better caching
 COPY requirements.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Force cache bust (change this value to force rebuild)
+ARG CACHEBUST=2
+
+# Install Python dependencies with fresh pip
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy application code and data
 COPY src/ ./src/
