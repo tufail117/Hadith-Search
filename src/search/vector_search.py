@@ -32,8 +32,14 @@ def get_chroma_collection():
     """
     global _chroma_collection
     if _chroma_collection is None:
-        client = chromadb.PersistentClient(path=str(CHROMA_DIR))
-        _chroma_collection = client.get_collection(CHROMA_COLLECTION)
+        try:
+            client = chromadb.PersistentClient(path=str(CHROMA_DIR))
+            _chroma_collection = client.get_collection(CHROMA_COLLECTION)
+        except Exception as e:
+            # Log the error for debugging
+            print(f"ChromaDB error loading collection: {e}")
+            print(f"ChromaDB path: {CHROMA_DIR}")
+            raise
     return _chroma_collection
 
 
