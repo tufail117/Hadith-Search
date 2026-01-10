@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 
 # Force cache bust (change this value to force rebuild)
-ARG CACHEBUST=4
+ARG CACHEBUST=5
 
 # Install Python dependencies with fresh pip
 RUN pip install --upgrade pip && \
@@ -25,14 +25,12 @@ COPY data/ ./data/
 COPY scripts/ ./scripts/
 COPY startup.py .
 
-# Rebuild indices during build (ensures cross-platform compatibility)
-# Delete old ChromaDB files first (they don't work across platforms)
-RUN rm -rf data/index/chroma_db && \
-    python -c "from src.ingestion.indexer import build_all_indices; build_all_indices()"
+# Clean up old ChromaDB (not cross-platform compatible)
+RUN rm -rf data/index/chroma_db
 
 # Expose port (Railway will override with $PORT)
 EXPOSE 8000
 
-# Start the application directly (indices are pre-built)
-CMD ["sh", "-c", "python -m uvicorn src.api.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
-
+# Start via startup script (rebuilds indices if needed)
+# Use increased healthcheck timeout (1800s) in railway.json
+CMD ["python", "startup.py"]
