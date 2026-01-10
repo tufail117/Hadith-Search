@@ -28,12 +28,13 @@ def get_indexing_status():
     }
 
 
-def check_chromadb_health():
-    """Check if ChromaDB collection is accessible."""
+def check_indices_health():
+    """Check if both ChromaDB and BM25 indices are accessible."""
     try:
         import chromadb
-        from src.config import CHROMA_DIR, CHROMA_COLLECTION
+        from src.config import CHROMA_DIR, CHROMA_COLLECTION, BM25_INDEX
         
+        # Check ChromaDB
         if not CHROMA_DIR.exists():
             print("ChromaDB directory does not exist")
             return False
@@ -41,10 +42,20 @@ def check_chromadb_health():
         client = chromadb.PersistentClient(path=str(CHROMA_DIR))
         collection = client.get_collection(CHROMA_COLLECTION)
         count = collection.count()
-        print(f"ChromaDB health check passed: {count} documents in collection")
-        return count > 0  # Must have documents
+        if count == 0:
+            print("ChromaDB collection is empty")
+            return False
+        print(f"ChromaDB health check passed: {count} documents")
+        
+        # Check BM25 index
+        if not BM25_INDEX.exists():
+            print(f"BM25 index not found at {BM25_INDEX}")
+            return False
+        print(f"BM25 health check passed: {BM25_INDEX}")
+        
+        return True
     except Exception as e:
-        print(f"ChromaDB health check failed: {e}")
+        print(f"Health check failed: {e}")
         return False
 
 
@@ -110,7 +121,7 @@ def main():
     
     # Check if we should force rebuild
     force_rebuild = os.environ.get("FORCE_REBUILD_INDEX", "0") == "1"
-    needs_rebuild = force_rebuild or not check_chromadb_health()
+    needs_rebuild = force_rebuild or not check_indices_health()
     
     if needs_rebuild:
         if force_rebuild:
