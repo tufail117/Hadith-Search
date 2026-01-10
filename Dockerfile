@@ -1,7 +1,8 @@
-# Use Python 3.11 slim image for smaller size
+# Simple Dockerfile: Copy pre-built indices directly
+# Indices are already built locally - no need to rebuild in Docker
+
 FROM python:3.11-slim
 
-# Set working directory
 WORKDIR /app
 
 # Install system dependencies
@@ -9,28 +10,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
+# Copy requirements and install Python dependencies
 COPY requirements.txt .
-
-# Force cache bust (change this value to force rebuild)
-ARG CACHEBUST=5
-
-# Install Python dependencies with fresh pip
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copy application code and data
+# Copy application code
 COPY src/ ./src/
-COPY data/ ./data/
-COPY scripts/ ./scripts/
 COPY startup.py .
 
-# Clean up old ChromaDB (not cross-platform compatible)
-RUN rm -rf data/index/chroma_db
+# Copy pre-built indices (already built locally)
+COPY data/processed/ ./data/processed/
+COPY data/index/ ./data/index/
 
 # Expose port (Railway will override with $PORT)
 EXPOSE 8000
 
-# Start via startup script (rebuilds indices if needed)
-# Use increased healthcheck timeout (1800s) in railway.json
+# Start the server - indices are pre-built!
 CMD ["python", "startup.py"]

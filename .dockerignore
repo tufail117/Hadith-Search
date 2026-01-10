@@ -26,8 +26,11 @@ Thumbs.db
 .git/
 .gitignore
 
-# Raw data (not needed - already processed)
+# Raw data (not needed - already processed into data/)
 raw_data/
+
+# Scripts (not needed at runtime)
+scripts/
 
 # Test files
 test_*.py

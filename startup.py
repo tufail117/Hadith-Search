@@ -1,140 +1,67 @@
 #!/usr/bin/env python3
 """
-Startup script for Railway deployment.
-Starts the server immediately and rebuilds index in background if needed.
-This ensures healthchecks pass while long-running index builds continue.
+Startup script for Hadith Search.
+Indices are pre-built in the Docker image - just verify and start server.
 """
 
-import os
 import sys
-import threading
 from pathlib import Path
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-# Global flag to track indexing status
-_indexing_in_progress = False
-_indexing_complete = False
-_indexing_error = None
 
-
-def get_indexing_status():
-    """Get current indexing status for API health endpoint."""
-    return {
-        "in_progress": _indexing_in_progress,
-        "complete": _indexing_complete,
-        "error": str(_indexing_error) if _indexing_error else None
-    }
-
-
-def check_indices_health():
-    """Check if both ChromaDB and BM25 indices are accessible."""
+def verify_indices():
+    """Verify that pre-built indices exist."""
+    from src.config import CHROMA_DIR, BM25_INDEX, HADITHS_JSON
+    
+    print("=" * 60)
+    print("HADITH SEARCH - STARTUP")
+    print("=" * 60)
+    
+    # Check required files
+    checks = [
+        (CHROMA_DIR, "ChromaDB directory"),
+        (BM25_INDEX, "BM25 index"),
+        (HADITHS_JSON, "Hadiths JSON"),
+    ]
+    
+    all_ok = True
+    for path, name in checks:
+        if path.exists():
+            print(f"✓ {name}: {path}")
+        else:
+            print(f"✗ {name}: NOT FOUND at {path}")
+            all_ok = False
+    
+    if not all_ok:
+        print("\nERROR: Missing pre-built indices!")
+        print("Indices should be built at Docker build time.")
+        sys.exit(1)
+    
+    # Quick ChromaDB health check
     try:
         import chromadb
-        from src.config import CHROMA_DIR, CHROMA_COLLECTION, BM25_INDEX
-        
-        # Check ChromaDB
-        if not CHROMA_DIR.exists():
-            print("ChromaDB directory does not exist")
-            return False
-            
+        from src.config import CHROMA_COLLECTION
         client = chromadb.PersistentClient(path=str(CHROMA_DIR))
         collection = client.get_collection(CHROMA_COLLECTION)
         count = collection.count()
-        if count == 0:
-            print("ChromaDB collection is empty")
-            return False
-        print(f"ChromaDB health check passed: {count} documents")
-        
-        # Check BM25 index
-        if not BM25_INDEX.exists():
-            print(f"BM25 index not found at {BM25_INDEX}")
-            return False
-        print(f"BM25 health check passed: {BM25_INDEX}")
-        
-        return True
+        print(f"✓ ChromaDB collection: {count} documents")
     except Exception as e:
-        print(f"Health check failed: {e}")
-        return False
-
-
-def rebuild_indices():
-    """Rebuild all search indices."""
-    global _indexing_in_progress, _indexing_complete, _indexing_error
+        print(f"✗ ChromaDB error: {e}")
+        sys.exit(1)
     
-    _indexing_in_progress = True
-    _indexing_complete = False
-    _indexing_error = None
-    
-    try:
-        print("=" * 70)
-        print("REBUILDING SEARCH INDICES (BACKGROUND)")
-        print("=" * 70)
-        
-        from src.config import HADITHS_JSON, CHROMA_DIR, BM25_INDEX
-        from src.ingestion.indexer import build_chroma_index, build_bm25_index
-        
-        # Check if hadiths.json exists
-        if not HADITHS_JSON.exists():
-            raise FileNotFoundError(f"{HADITHS_JSON} not found!")
-        
-        # Rebuild ChromaDB
-        print("\n[1/2] Rebuilding ChromaDB vector index...")
-        import shutil
-        if CHROMA_DIR.exists():
-            shutil.rmtree(CHROMA_DIR)
-        build_chroma_index(HADITHS_JSON, CHROMA_DIR)
-        
-        # Rebuild BM25
-        print("\n[2/2] Rebuilding BM25 keyword index...")
-        if BM25_INDEX.exists():
-            BM25_INDEX.unlink()
-        build_bm25_index(HADITHS_JSON, BM25_INDEX)
-        
-        print("\n" + "=" * 70)
-        print("INDICES REBUILT SUCCESSFULLY")
-        print("=" * 70)
-        
-        _indexing_complete = True
-        
-    except Exception as e:
-        print(f"ERROR during index rebuild: {e}")
-        _indexing_error = e
-    finally:
-        _indexing_in_progress = False
-
-
-def start_background_indexing():
-    """Start index rebuild in a background thread."""
-    thread = threading.Thread(target=rebuild_indices, daemon=True)
-    thread.start()
-    print("Background indexing thread started")
-    return thread
+    print("=" * 60)
+    print("All indices verified!")
+    print("=" * 60)
 
 
 def main():
     """Main startup routine."""
-    print("=" * 70)
-    print("HADITH SEARCH - STARTUP CHECK")
-    print("=" * 70)
+    verify_indices()
     
-    # Check if we should force rebuild
-    force_rebuild = os.environ.get("FORCE_REBUILD_INDEX", "0") == "1"
-    needs_rebuild = force_rebuild or not check_indices_health()
-    
-    if needs_rebuild:
-        if force_rebuild:
-            print("FORCE_REBUILD_INDEX=1 detected")
-        print("Index needs rebuild - starting in background thread...")
-        start_background_indexing()
-    else:
-        global _indexing_complete
-        _indexing_complete = True
-        print("All indices healthy!")
-    
-    # Start the server IMMEDIATELY (don't wait for indexing)
-    print("\nStarting uvicorn server (indexing continues in background)...")
+    # Start the server
+    print("\nStarting uvicorn server...")
     import uvicorn
     from src.config import SERVER_HOST, SERVER_PORT
     
