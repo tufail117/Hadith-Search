@@ -8,7 +8,12 @@ BASE_DIR = Path(__file__).parent.parent
 RAW_DATA_DIR = BASE_DIR / "raw_data"
 DATA_DIR = BASE_DIR / "data"
 PROCESSED_DIR = DATA_DIR / "processed"
-INDEX_DIR = DATA_DIR / "index"
+
+# Index directory - use /tmp in Railway (container filesystem is read-only)
+if os.environ.get("RAILWAY_ENVIRONMENT"):
+    INDEX_DIR = Path("/tmp/hadith_index")
+else:
+    INDEX_DIR = DATA_DIR / "index"
 
 # Data files
 HADITHS_JSON = PROCESSED_DIR / "hadiths.json"
