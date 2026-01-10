@@ -26,8 +26,9 @@ COPY scripts/ ./scripts/
 COPY startup.py .
 
 # Rebuild indices during build (ensures cross-platform compatibility)
-# This runs the ingestion to create fresh ChromaDB and BM25 indices
-RUN python -c "from src.ingestion.indexer import build_all_indices; build_all_indices()"
+# Delete old ChromaDB files first (they don't work across platforms)
+RUN rm -rf data/index/chroma_db && \
+    python -c "from src.ingestion.indexer import build_all_indices; build_all_indices()"
 
 # Expose port (Railway will override with $PORT)
 EXPOSE 8000
