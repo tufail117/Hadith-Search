@@ -9,9 +9,21 @@ RAW_DATA_DIR = BASE_DIR / "raw_data"
 DATA_DIR = BASE_DIR / "data"
 PROCESSED_DIR = DATA_DIR / "processed"
 
-# Index directory - use /tmp in Railway (container filesystem is read-only)
+# Index directory - use persistent volume in Railway
+# Railway volumes are mounted at /data by default
 if os.environ.get("RAILWAY_ENVIRONMENT"):
-    INDEX_DIR = Path("/tmp/hadith_index")
+    # Use /data for persistent storage (requires Railway volume)
+    # Fall back to /tmp if /data is not writable (volume not attached)
+    volume_path = Path("/data/hadith_index")
+    tmp_path = Path("/tmp/hadith_index")
+    
+    # Try to use volume path, fallback to tmp
+    try:
+        volume_path.mkdir(parents=True, exist_ok=True)
+        INDEX_DIR = volume_path
+    except (PermissionError, OSError):
+        tmp_path.mkdir(parents=True, exist_ok=True)
+        INDEX_DIR = tmp_path
 else:
     INDEX_DIR = DATA_DIR / "index"
 
