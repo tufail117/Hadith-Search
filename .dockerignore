@@ -26,11 +26,9 @@ Thumbs.db
 .git/
 .gitignore
 
-# Raw data (not needed - already processed into data/)
-raw_data/
-
-# Scripts (not needed at runtime)
-scripts/
+# Local pre-built indices (will be built inside Docker instead)
+data/index/
+data/processed/
 
 # Test files
 test_*.py
