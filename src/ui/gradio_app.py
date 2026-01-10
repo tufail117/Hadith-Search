@@ -254,6 +254,39 @@ def format_results(results: list, query: str, expanded_query: str, cached: bool,
 
 def search_fn(query: str) -> str:
     """Search function for Gradio interface."""
+    # Check if indexing is in progress
+    try:
+        from startup import get_indexing_status
+        status = get_indexing_status()
+        if status["in_progress"]:
+            return """
+## ⏳ Database Initialization in Progress
+
+<div style="background: rgba(201, 162, 39, 0.15); border: 1px solid rgba(201, 162, 39, 0.4); border-radius: 12px; padding: 24px; margin: 16px 0;">
+
+**The hadith database is currently being indexed.** This is a one-time process that takes approximately 20-30 minutes.
+
+🔄 **Please check back in a few minutes** — the search will be fully functional once indexing completes.
+
+Thank you for your patience!
+
+</div>
+"""
+        elif status["error"]:
+            return f"""
+## ⚠️ Database Error
+
+<div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 12px; padding: 20px;">
+
+An error occurred during database initialization: `{status['error']}`
+
+Please contact support or try again later.
+
+</div>
+"""
+    except ImportError:
+        pass  # startup module not available (running standalone)
+    
     if not query.strip():
         return """
 <div style="text-align: center; padding: 40px 20px;">
