@@ -44,7 +44,7 @@ SERVER_PORT = int(os.environ.get("PORT", 8000))
 
 # Embedding batch sizes (for ingestion)
 EMBEDDING_BATCH_SIZE_GPU = 512
-EMBEDDING_BATCH_SIZE_CPU = 32
+EMBEDDING_BATCH_SIZE_CPU = 16
 
 # ChromaDB collection name
 CHROMA_COLLECTION = "hadiths"

@@ -39,6 +39,7 @@ def build_vector_index(hadiths: List[Dict[str, Any]]) -> None:
     """
     import torch
     import os
+    import sys
     
     # Force CPU to avoid MPS segfault issues with sentence-transformers
     # Set environment variable to disable MPS
@@ -55,11 +56,14 @@ def build_vector_index(hadiths: List[Dict[str, Any]]) -> None:
         device = "cpu"
         batch_size = EMBEDDING_BATCH_SIZE_CPU
         print(f"Using CPU (batch_size={batch_size})")
+    sys.stdout.flush()
     
     print("Loading embedding model...")
+    sys.stdout.flush()
     model = SentenceTransformer(EMBEDDING_MODEL, device=device)
 
     print("Creating ChromaDB collection...")
+    sys.stdout.flush()
     CHROMA_DIR.mkdir(parents=True, exist_ok=True)
 
     client = chromadb.PersistentClient(path=str(CHROMA_DIR))
@@ -77,9 +81,11 @@ def build_vector_index(hadiths: List[Dict[str, Any]]) -> None:
 
     # batch_size is already set based on detected device above
     total = len(hadiths)
+    total_batches = (total + batch_size - 1) // batch_size
 
     for i in range(0, total, batch_size):
         batch = hadiths[i:i + batch_size]
+        batch_num = i // batch_size + 1
 
         ids = [h["id"] for h in batch]
         texts = [h["full_text"] for h in batch]
@@ -95,8 +101,15 @@ def build_vector_index(hadiths: List[Dict[str, Any]]) -> None:
             for h in batch
         ]
 
-        print(f"Embedding batch {i // batch_size + 1}/{(total + batch_size - 1) // batch_size}")
-        embeddings = model.encode(texts, show_progress_bar=False).tolist()
+        print(f"Embedding batch {batch_num}/{total_batches}")
+        sys.stdout.flush()
+        
+        try:
+            embeddings = model.encode(texts, show_progress_bar=False).tolist()
+        except Exception as e:
+            print(f"Error encoding batch {batch_num}: {e}")
+            sys.stdout.flush()
+            raise
 
         collection.add(
             ids=ids,
@@ -104,8 +117,14 @@ def build_vector_index(hadiths: List[Dict[str, Any]]) -> None:
             metadatas=metadatas,
             documents=texts
         )
+        
+        # Flush after each batch to ensure logs appear
+        if batch_num % 10 == 0:
+            print(f"  Progress: {batch_num}/{total_batches} batches ({100*batch_num//total_batches}%)")
+            sys.stdout.flush()
 
     print(f"Vector index built with {total} hadiths")
+    sys.stdout.flush()
 
 
 def build_chroma_index(hadiths_json: Path, chroma_dir: Path) -> None:
