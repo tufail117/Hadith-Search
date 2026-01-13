@@ -510,17 +510,7 @@ Enter a question or topic above to search authentic hadiths from **Sahih al-Bukh
                 <em>📜 Authentic hadith text with verified references — No AI hallucination</em>
             </p>
             
-            <!-- Contact Section -->
-            <div style="border-top: 1px solid rgba(0, 0, 0, 0.06); padding-top: 16px; margin-top: 16px;">
-                <p style="color: #6b7280; font-size: 12px; margin-bottom: 6px;">
-                    💬 <strong>Feedback & Suggestions</strong>
-                </p>
-                <p style="color: #6b7280; font-size: 12px;">
-                    📧 <a href="mailto:tufail.waris117@gmail.com" style="color: #059669; text-decoration: none;">tufail.waris117@gmail.com</a>
-                    &nbsp;•&nbsp;
-                    🔗 <a href="https://www.linkedin.com/in/tufail-waris-16935bb3/" target="_blank" style="color: #059669; text-decoration: none;">Connect on LinkedIn</a>
-                </p>
-            </div>
+
         </div>
         """)
 
